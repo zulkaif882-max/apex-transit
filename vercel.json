@@ -1,9 +1,0 @@
-{
-  "outputDirectory": "public",
-  "routes": [
-    { "src": "/api/data", "dest": "/api/data.js" },
-    { "src": "/api/save", "dest": "/api/save.js" },
-    { "src": "/admin",    "dest": "/admin.html"  },
-    { "src": "/(.*)",     "dest": "/$1"          }
-  ]
-}
