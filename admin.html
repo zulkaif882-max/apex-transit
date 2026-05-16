@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>APEX TRANSIT — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --void:#04060d; --ink:#070b15;
+  --edge:rgba(255,255,255,0.065); --edge2:rgba(255,255,255,0.038);
+  --gold:#c9a84c; --gold2:#e8c96a; --ice:#5bc4e8; --sage:#6fcf97;
+  --rose:#e07070; --amber:#f0a14a;
+  --text:#eef0f7; --text2:rgba(238,240,247,0.52); --text3:rgba(238,240,247,0.26);
+  --mono:'JetBrains Mono',monospace; --sans:'Sora',sans-serif; --display:'Syne',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-font-smoothing:antialiased;}
+body{background:var(--void);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 90% -5%,rgba(201,168,76,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 55% at 5% 110%,rgba(240,161,74,0.04) 0%,transparent 55%);}
+.grid-layer{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,0.016) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.016) 1px,transparent 1px);
+  background-size:60px 60px;
+  -webkit-mask-image:radial-gradient(ellipse 100% 100% at 50% 0%,black 20%,transparent 100%);
+  mask-image:radial-gradient(ellipse 100% 100% at 50% 0%,black 20%,transparent 100%);}
+
+/* Header */
+header{position:sticky;top:0;z-index:100;height:62px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 48px;background:rgba(4,6,13,0.85);
+  backdrop-filter:blur(28px) saturate(1.5);-webkit-backdrop-filter:blur(28px) saturate(1.5);
+  border-bottom:1px solid var(--edge2);}
+.logo{display:flex;align-items:center;gap:13px;}
+.logo-hex{width:34px;height:34px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);
+  background:rgba(201,168,76,0.07);display:flex;align-items:center;justify-content:center;}
+.logo-hex svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.logo-name{font-family:var(--display);font-weight:700;font-size:14.5px;letter-spacing:0.14em;text-transform:uppercase;}
+.logo-name em{font-style:normal;color:var(--gold);}
+.logo-sep{width:1px;height:20px;background:var(--edge);margin:0 4px;}
+.logo-sub{font-family:var(--mono);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);}
+.admin-pill{display:flex;align-items:center;gap:7px;background:rgba(240,161,74,0.08);
+  border:1px solid rgba(240,161,74,0.22);border-radius:100px;padding:5px 14px;
+  font-family:var(--mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber);}
+.admin-pill::before{content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+/* Page */
+.page{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:48px 48px 80px;}
+.page-head{margin-bottom:36px;}
+.page-title{font-family:var(--display);font-weight:800;font-size:46px;
+  letter-spacing:-0.02em;line-height:1;margin-bottom:8px;}
+.page-title span{color:var(--gold);}
+.page-desc{font-family:var(--mono);font-size:11px;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--text3);}
+
+/* Preview */
+.preview-strip{display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--edge2);border:1px solid var(--edge2);
+  border-radius:14px;overflow:hidden;margin-bottom:32px;}
+.prev-tile{background:rgba(6,9,17,0.9);padding:20px 24px;text-align:center;position:relative;overflow:hidden;}
+.prev-tile::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;}
+.prev-tile:nth-child(1)::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.prev-tile:nth-child(2)::before{background:linear-gradient(90deg,transparent,var(--ice),transparent);}
+.prev-tile:nth-child(3)::before{background:linear-gradient(90deg,transparent,var(--sage),transparent);}
+.prev-label{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.prev-val{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;letter-spacing:-0.03em;}
+.prev-tile:nth-child(1) .prev-val{color:var(--gold);}
+.prev-tile:nth-child(2) .prev-val{color:var(--ice);}
+.prev-tile:nth-child(3) .prev-val{color:var(--sage);}
+
+/* Section label */
+.sec-label{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--text3);margin-bottom:14px;
+  display:flex;align-items:center;gap:12px;}
+.sec-label::before{content:'';display:block;width:20px;height:1px;
+  background:linear-gradient(90deg,var(--gold),transparent);}
+
+/* Cards */
+.form-card{background:rgba(6,9,17,0.88);border:1px solid var(--edge2);
+  border-radius:16px;overflow:hidden;margin-bottom:14px;}
+.card-head{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;border-bottom:1px solid var(--edge2);background:rgba(255,255,255,0.015);}
+.cht{font-family:var(--display);font-weight:700;font-size:12px;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--text);
+  display:flex;align-items:center;gap:10px;}
+.ctbar{width:3px;height:13px;border-radius:2px;}
+.ctbar-gold{background:var(--gold);}.ctbar-ice{background:var(--ice);}.ctbar-sage{background:var(--sage);}
+.ctag{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--text3);padding:3px 9px;border-radius:5px;border:1px solid var(--edge2);}
+.card-body{padding:26px 28px;}
+
+/* Inputs */
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.field{display:flex;flex-direction:column;gap:8px;}
+.fl{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:0.16em;
+  text-transform:uppercase;color:var(--text3);}
+.fl small{display:block;font-size:9px;color:rgba(238,240,247,0.18);margin-top:2px;text-transform:none;}
+
+.num-wrap{display:flex;align-items:stretch;background:rgba(255,255,255,0.03);
+  border:1px solid var(--edge2);border-radius:10px;overflow:hidden;
+  transition:border-color 0.2s,box-shadow 0.2s;}
+.num-wrap:focus-within{border-color:rgba(201,168,76,0.35);box-shadow:0 0 0 3px rgba(201,168,76,0.08);}
+.nb{width:38px;flex-shrink:0;background:rgba(255,255,255,0.04);border:none;
+  color:var(--text2);font-size:20px;font-weight:300;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background 0.15s,color 0.15s;user-select:none;}
+.nb:hover{background:rgba(255,255,255,0.08);color:var(--text);}
+.nb:active{background:rgba(201,168,76,0.12);color:var(--gold);}
+input[type="number"]{flex:1;min-width:0;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:var(--mono);font-size:22px;font-weight:500;
+  text-align:center;padding:14px 4px;-moz-appearance:textfield;}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+textarea,input[type="password"]{width:100%;background:rgba(255,255,255,0.03);
+  border:1px solid var(--edge2);border-radius:10px;color:var(--text);
+  font-family:var(--sans);font-size:13.5px;line-height:1.75;padding:14px 16px;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+textarea{resize:vertical;min-height:100px;}
+textarea::placeholder,input[type="password"]::placeholder{color:var(--text3);}
+textarea:focus,input[type="password"]:focus{
+  border-color:rgba(201,168,76,0.35);box-shadow:0 0 0 3px rgba(201,168,76,0.08);}
+
+.notes-footer{display:flex;align-items:center;justify-content:flex-end;
+  margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;color:var(--text3);}
+
+/* PIN row */
+.pin-row{display:flex;align-items:flex-end;gap:12px;}
+.pin-row .field{flex:1;}
+.pin-hint{font-family:var(--mono);font-size:10px;color:var(--text3);
+  letter-spacing:0.1em;margin-top:6px;line-height:1.5;}
+
+/* Publish */
+.publish-wrap{margin-top:8px;}
+.btn-pub{width:100%;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(201,168,76,0.15) 0%,rgba(201,168,76,0.08) 100%);
+  border:1px solid rgba(201,168,76,0.35);border-radius:12px;color:var(--gold2);
+  font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:0.18em;
+  text-transform:uppercase;padding:20px 40px;cursor:pointer;
+  transition:all 0.25s cubic-bezier(0.22,1,0.36,1);}
+.btn-pub::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(201,168,76,0.18),transparent);
+  opacity:0;transition:opacity 0.25s;}
+.btn-pub:hover{border-color:rgba(201,168,76,0.6);
+  box-shadow:0 0 32px rgba(201,168,76,0.15);transform:translateY(-1px);}
+.btn-pub:hover::before{opacity:1;}
+.btn-pub:active{transform:translateY(0);}
+.btn-pub:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none;pointer-events:none;}
+.btn-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:12px;}
+
+/* Status bar */
+#status-bar{display:none;margin-top:12px;padding:12px 18px;border-radius:8px;
+  font-family:var(--mono);font-size:12px;letter-spacing:0.1em;text-align:center;}
+#status-bar.ok{background:rgba(111,207,151,0.09);color:var(--sage);border:1px solid rgba(111,207,151,0.22);}
+#status-bar.err{background:rgba(224,112,112,0.09);color:var(--rose);border:1px solid rgba(224,112,112,0.22);}
+#status-bar.info{background:rgba(91,196,232,0.09);color:var(--ice);border:1px solid rgba(91,196,232,0.22);}
+
+/* Animations */
+@keyframes fadeSlide{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.preview-strip{animation:fadeSlide 0.5s cubic-bezier(0.22,1,0.36,1) both 0.04s;}
+.form-card{animation:fadeSlide 0.5s cubic-bezier(0.22,1,0.36,1) both;}
+.form-card:nth-child(1){animation-delay:0.10s;}.form-card:nth-child(2){animation-delay:0.17s;}
+.form-card:nth-child(3){animation-delay:0.22s;}
+.publish-wrap{animation:fadeSlide 0.5s cubic-bezier(0.22,1,0.36,1) both 0.28s;}
+@keyframes previewPop{0%{transform:scale(0.94);opacity:0.5;}60%{transform:scale(1.04);}100%{transform:scale(1);opacity:1;}}
+.prev-val.pop{animation:previewPop 0.28s cubic-bezier(0.22,1,0.36,1);}
+
+@media(max-width:700px){
+  .page{padding:24px 16px 60px;}header{padding:0 16px;}
+  .logo-sep,.logo-sub{display:none;}
+  .metric-grid{grid-template-columns:1fr;}.preview-strip{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="bg-layer" aria-hidden="true"></div>
+<div class="grid-layer" aria-hidden="true"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-hex"><svg viewBox="0 0 16 16"><polygon points="8,1.5 14.5,5 14.5,11 8,14.5 1.5,11 1.5,5"/><line x1="8" y1="1.5" x2="8" y2="14.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/></svg></div>
+    <div class="logo-name"><em>APEX</em> TRANSIT</div>
+    <span class="logo-sep" aria-hidden="true"></span>
+    <span class="logo-sub">Operator</span>
+  </div>
+  <div class="admin-pill">Admin Panel</div>
+</header>
+
+<main class="page">
+  <div class="page-head">
+    <div class="page-title">Publish <span>Update</span></div>
+    <div class="page-desc">// Enter your admin PIN and click Publish to update all viewers</div>
+  </div>
+
+  <!-- Live preview -->
+  <div class="preview-strip" aria-label="Live preview">
+    <div class="prev-tile"><div class="prev-label">Travelers</div><div class="prev-val" id="pv-t">0</div></div>
+    <div class="prev-tile"><div class="prev-label">OK Passengers</div><div class="prev-val" id="pv-p">0</div></div>
+    <div class="prev-tile"><div class="prev-label">Fed Count</div><div class="prev-val" id="pv-f">0</div></div>
+  </div>
+
+  <!-- Counts -->
+  <div class="sec-label">Passenger Counts</div>
+  <div class="form-card">
+    <div class="card-head">
+      <div class="cht"><span class="ctbar ctbar-gold" aria-hidden="true"></span>Core Metrics</div>
+      <div class="ctag">Live Preview</div>
+    </div>
+    <div class="card-body">
+      <div class="metric-grid">
+        <div class="field">
+          <label class="fl" for="it">Total Travelers<small>All aboard / recorded</small></label>
+          <div class="num-wrap">
+            <button class="nb" onclick="adj('it',-1,'pv-t')" aria-label="Decrease">−</button>
+            <input type="number" id="it" min="0" max="99999" value="0" oninput="sp('it','pv-t')" aria-label="Total travelers"/>
+            <button class="nb" onclick="adj('it',1,'pv-t')" aria-label="Increase">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="fl" for="ip">OK Passengers<small>Confirmed safe</small></label>
+          <div class="num-wrap">
+            <button class="nb" onclick="adj('ip',-1,'pv-p')" aria-label="Decrease">−</button>
+            <input type="number" id="ip" min="0" max="99999" value="0" oninput="sp('ip','pv-p')" aria-label="OK passengers"/>
+            <button class="nb" onclick="adj('ip',1,'pv-p')" aria-label="Increase">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="fl" for="iff">Fed Count<small>Meals served</small></label>
+          <div class="num-wrap">
+            <button class="nb" onclick="adj('iff',-1,'pv-f')" aria-label="Decrease">−</button>
+            <input type="number" id="iff" min="0" max="99999" value="0" oninput="sp('iff','pv-f')" aria-label="Fed count"/>
+            <button class="nb" onclick="adj('iff',1,'pv-f')" aria-label="Increase">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="sec-label" style="margin-top:26px;">Notices</div>
+  <div class="form-card">
+    <div class="card-head">
+      <div class="cht"><span class="ctbar ctbar-sage" aria-hidden="true"></span>Operator Notes</div>
+      <div class="ctag">Broadcast</div>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label class="fl" for="fn">Announcement / Notes</label>
+        <textarea id="fn" maxlength="500" placeholder="Enter operational notes, alerts, or announcements…" oninput="updateCounter()"></textarea>
+        <div class="notes-footer"><span id="char-count">0</span>&nbsp;/ 500</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIN + Publish -->
+  <div class="sec-label" style="margin-top:26px;">Authentication</div>
+  <div class="form-card">
+    <div class="card-head">
+      <div class="cht"><span class="ctbar ctbar-ice" aria-hidden="true"></span>Admin PIN</div>
+      <div class="ctag">Required to publish</div>
+    </div>
+    <div class="card-body">
+      <div class="pin-row">
+        <div class="field">
+          <label class="fl" for="pin-input">Enter your 4-digit PIN</label>
+          <input type="password" id="pin-input" maxlength="4" placeholder="••••"
+            autocomplete="off" inputmode="numeric" pattern="[0-9]*"
+            aria-label="Admin PIN"/>
+          <div class="pin-hint">Set in Vercel → Settings → Environment Variables → ADMIN_PIN</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="publish-wrap">
+    <button class="btn-pub" id="bp" onclick="pub()" aria-label="Publish update">
+      <div class="btn-inner">
+        <span id="btn-ico" aria-hidden="true">⬡</span>
+        <span id="btn-txt">Publish Update</span>
+      </div>
+    </button>
+    <div id="status-bar" role="status" aria-live="polite"></div>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+const MAX = 99999;
+let lastPub = 0;
+let toastTimer = null;
+
+/* ── Preview sync ─────────────────────────────────── */
+function sp(fid, pid) {
+  let v = parseInt(document.getElementById(fid).value) || 0;
+  v = Math.max(0, Math.min(MAX, v));
+  document.getElementById(fid).value = v;
+  const el = document.getElementById(pid);
+  el.classList.remove('pop'); void el.offsetWidth;
+  el.textContent = v; el.classList.add('pop');
+}
+function adj(fid, delta, pid) {
+  const inp = document.getElementById(fid);
+  inp.value = Math.max(0, Math.min(MAX, (parseInt(inp.value) || 0) + delta));
+  sp(fid, pid);
+}
+function updateCounter() {
+  const len = document.getElementById('fn').value.length;
+  const el  = document.getElementById('char-count');
+  el.textContent = len;
+  el.style.color = len > 450 ? 'var(--amber)' : '';
+}
+
+/* ── Status bar ───────────────────────────────────── */
+function showStatus(msg, type) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.className = type || 'info';
+  el.style.display = 'block';
+  clearTimeout(toastTimer);
+  if (type === 'ok') {
+    toastTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+}
+
+/* ── Load current data into form ──────────────────── */
+async function loadData() {
+  try {
+    showStatus('Loading current data…', 'info');
+    const r = await fetch('/api/data?t=' + Date.now());
+    if (!r.ok) {
+      showStatus('Could not load data — HTTP ' + r.status + '. Check Vercel logs.', 'err');
+      return;
+    }
+    const d = await r.json();
+    const clamp = v => Math.max(0, Math.min(MAX, parseInt(v) || 0));
+    document.getElementById('it').value  = clamp(d.travelers);
+    document.getElementById('ip').value  = clamp(d.passengers);
+    document.getElementById('iff').value = clamp(d.fed);
+    document.getElementById('fn').value  = typeof d.notes === 'string' ? d.notes.slice(0,500) : '';
+    [['it','pv-t'],['ip','pv-p'],['iff','pv-f']].forEach(([f,p])=>{
+      document.getElementById(p).textContent = parseInt(document.getElementById(f).value)||0;
+    });
+    updateCounter();
+    showStatus('Current data loaded — edit and publish', 'ok');
+  } catch(e) {
+    showStatus('Network error: ' + e.message, 'err');
+  }
+}
+loadData();
+
+/* ── Publish ──────────────────────────────────────── */
+async function pub() {
+  const pin = (document.getElementById('pin-input').value || '').trim();
+
+  if (!pin) {
+    showStatus('Enter your admin PIN before publishing', 'err');
+    document.getElementById('pin-input').focus();
+    return;
+  }
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+    showStatus('PIN must be exactly 4 digits', 'err');
+    return;
+  }
+
+  // Client rate limit
+  if (Date.now() - lastPub < 5000) {
+    showStatus('Please wait a moment before publishing again', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('bp');
+  btn.disabled = true;
+  document.getElementById('btn-ico').textContent = '◌';
+  document.getElementById('btn-txt').textContent = 'Publishing…';
+  showStatus('Sending to server…', 'info');
+
+  const clamp = v => Math.max(0, Math.min(MAX, parseInt(v)||0));
+  const notes = (document.getElementById('fn').value||'').trim().slice(0,500).replace(/[<>]/g,'');
+
+  const payload = {
+    travelers:  clamp(document.getElementById('it').value),
+    passengers: clamp(document.getElementById('ip').value),
+    fed:        clamp(document.getElementById('iff').value),
+    notes,
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 12000);
+
+    const r = await fetch('/api/save', {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Pin':        pin         // PIN goes in header — never in URL
+      },
+      body:   JSON.stringify(payload),
+      signal: controller.signal
+    });
+    clearTimeout(tid);
+
+    const body = await r.json().catch(() => ({}));
+
+    if (r.ok) {
+      lastPub = Date.now();
+      document.getElementById('pin-input').value = '';  // clear PIN after use
+      showStatus('✓ Published successfully — all viewers updating now', 'ok');
+    } else if (r.status === 401) {
+      showStatus('✕ Incorrect PIN — check your ADMIN_PIN environment variable in Vercel', 'err');
+    } else if (r.status === 429) {
+      showStatus('✕ Too many requests — wait a few seconds and try again', 'err');
+    } else if (r.status === 500) {
+      showStatus('✕ Server error: ' + (body.error || 'unknown') + ' — check Vercel environment variables', 'err');
+    } else {
+      showStatus('✕ Error ' + r.status + ': ' + (body.error || 'unknown'), 'err');
+    }
+
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      showStatus('✕ Request timed out — check your internet connection', 'err');
+    } else {
+      showStatus('✕ Network error: ' + e.message, 'err');
+    }
+  }
+
+  btn.disabled = false;
+  document.getElementById('btn-ico').textContent = '⬡';
+  document.getElementById('btn-txt').textContent = 'Publish Update';
+}
+
+// Enter key in PIN field triggers publish
+document.getElementById('pin-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') pub();
+});
+
+// Warn before closing mid-publish
+window.addEventListener('beforeunload', e => {
+  if (document.getElementById('bp').disabled) {
+    e.preventDefault(); e.returnValue = '';
+  }
+});
+</script>
+</body>
+</html>

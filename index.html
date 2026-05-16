@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>APEX TRANSIT — Operations Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --void:#04060d; --edge2:rgba(255,255,255,0.038);
+  --gold:#c9a84c; --ice:#5bc4e8; --sage:#6fcf97;
+  --rose:#e07070; --amber:#f0a14a;
+  --text:#eef0f7; --text2:rgba(238,240,247,0.52); --text3:rgba(238,240,247,0.26);
+  --mono:'JetBrains Mono',monospace; --sans:'Sora',sans-serif; --display:'Syne',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-font-smoothing:antialiased;}
+body{background:var(--void);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 90% 55% at 15% -5%,rgba(201,168,76,0.07) 0%,transparent 60%),
+    radial-gradient(ellipse 70% 60% at 88% 105%,rgba(91,196,232,0.05) 0%,transparent 55%);}
+.grid-layer{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,0.017) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.017) 1px,transparent 1px);
+  background-size:60px 60px;
+  -webkit-mask-image:radial-gradient(ellipse 100% 80% at 50% 0%,black 30%,transparent 100%);
+  mask-image:radial-gradient(ellipse 100% 80% at 50% 0%,black 30%,transparent 100%);}
+
+/* Header */
+header{position:sticky;top:0;z-index:100;height:62px;display:flex;align-items:center;
+  padding:0 48px;background:rgba(4,6,13,0.85);
+  backdrop-filter:blur(28px) saturate(1.5);-webkit-backdrop-filter:blur(28px) saturate(1.5);
+  border-bottom:1px solid var(--edge2);}
+.logo{display:flex;align-items:center;gap:13px;}
+.logo-hex{width:34px;height:34px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);
+  background:rgba(201,168,76,0.07);display:flex;align-items:center;justify-content:center;}
+.logo-hex svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;}
+.logo-name{font-family:var(--display);font-weight:700;font-size:14.5px;
+  letter-spacing:0.14em;text-transform:uppercase;}
+.logo-name em{font-style:normal;color:var(--gold);}
+.header-core{position:absolute;left:50%;transform:translateX(-50%);}
+.live-chip{display:flex;align-items:center;gap:8px;background:rgba(111,207,151,0.07);
+  border:1px solid rgba(111,207,151,0.18);border-radius:100px;padding:6px 16px 6px 12px;
+  transition:all 0.4s;}
+.live-chip.warn{background:rgba(240,161,74,0.07);border-color:rgba(240,161,74,0.22);}
+.live-chip.dead{background:rgba(224,112,112,0.07);border-color:rgba(224,112,112,0.22);}
+.ldot{position:relative;width:8px;height:8px;flex-shrink:0;}
+.ldot::before{content:'';position:absolute;inset:0;border-radius:50%;
+  background:var(--sage);box-shadow:0 0 8px var(--sage);transition:all 0.4s;}
+.live-chip.warn .ldot::before{background:var(--amber);box-shadow:0 0 8px var(--amber);}
+.live-chip.dead .ldot::before{background:var(--rose);box-shadow:none;}
+.ldot::after{content:'';position:absolute;inset:-2px;border-radius:50%;
+  border:1px solid var(--sage);animation:lr 2.2s ease-out infinite;}
+.live-chip.dead .ldot::after{display:none;}
+@keyframes lr{0%{transform:scale(1);opacity:.7;}100%{transform:scale(2.8);opacity:0;}}
+.chip-label{font-family:var(--mono);font-size:9.5px;letter-spacing:0.18em;
+  text-transform:uppercase;color:var(--sage);transition:color 0.4s;}
+.live-chip.warn .chip-label{color:var(--amber);}
+.live-chip.dead .chip-label{color:var(--rose);}
+.hright{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+#ht{font-family:var(--mono);font-size:15px;color:var(--text);letter-spacing:0.04em;line-height:1;}
+#hd{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;}
+
+/* Page */
+.page{position:relative;z-index:1;padding:44px 48px 64px;max-width:1480px;margin:0 auto;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+.eyebrow::before{content:'';display:block;width:22px;height:1px;
+  background:linear-gradient(90deg,var(--gold),transparent);}
+
+/* KPI */
+.kpi-strip{display:grid;grid-template-columns:repeat(3,1fr);
+  border:1px solid var(--edge2);border-radius:18px;overflow:hidden;
+  margin-bottom:16px;gap:1px;background:var(--edge2);}
+.kpi{position:relative;overflow:hidden;background:rgba(6,9,17,0.92);
+  padding:38px 42px 30px;transition:background 0.3s;}
+.kpi:hover{background:rgba(10,14,24,0.97);}
+.kpi::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;}
+.kpi-a::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.kpi-b::before{background:linear-gradient(90deg,transparent,var(--ice),transparent);}
+.kpi-c::before{background:linear-gradient(90deg,transparent,var(--sage),transparent);}
+.kpi::after{content:'';position:absolute;border-radius:50%;width:280px;height:280px;
+  top:-80px;right:-80px;pointer-events:none;opacity:0;transition:opacity 0.5s;}
+.kpi-a::after{background:radial-gradient(circle,rgba(201,168,76,0.1),transparent 65%);}
+.kpi-b::after{background:radial-gradient(circle,rgba(91,196,232,0.1),transparent 65%);}
+.kpi-c::after{background:radial-gradient(circle,rgba(111,207,151,0.1),transparent 65%);}
+.kpi:hover::after{opacity:1;}
+.kpi-head{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;
+  font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);margin-bottom:22px;}
+.led{width:5px;height:5px;border-radius:50%;}
+.kpi-a .led{background:var(--gold);box-shadow:0 0 7px var(--gold);}
+.kpi-b .led{background:var(--ice);box-shadow:0 0 7px var(--ice);}
+.kpi-c .led{background:var(--sage);box-shadow:0 0 7px var(--sage);}
+.kpi-val{font-family:var(--display);font-weight:800;font-size:78px;line-height:0.88;
+  letter-spacing:-0.035em;margin-bottom:26px;position:relative;z-index:1;}
+.kpi-a .kpi-val{color:var(--gold);}
+.kpi-b .kpi-val{color:var(--ice);}
+.kpi-c .kpi-val{color:var(--sage);}
+.kpi-foot{display:flex;align-items:center;justify-content:space-between;
+  padding-top:16px;border-top:1px solid var(--edge2);}
+.kpi-name{font-size:12.5px;font-weight:500;color:var(--text2);}
+.delta{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:5px;}
+.delta.up{background:rgba(111,207,151,0.09);color:var(--sage);border:1px solid rgba(111,207,151,0.22);}
+.delta.dn{background:rgba(224,112,112,0.09);color:var(--rose);border:1px solid rgba(224,112,112,0.22);}
+.delta.flat{background:rgba(255,255,255,0.04);color:var(--text3);border:1px solid var(--edge2);}
+.kwm{position:absolute;right:-6px;bottom:-28px;font-family:var(--display);font-weight:800;
+  font-size:140px;line-height:1;color:rgba(255,255,255,0.018);pointer-events:none;
+  user-select:none;z-index:0;letter-spacing:-0.05em;}
+
+/* Notes */
+.notes-panel{background:rgba(6,9,17,0.88);border:1px solid var(--edge2);border-radius:18px;overflow:hidden;}
+.panel-hd{display:flex;align-items:center;justify-content:space-between;
+  padding:18px 30px 16px;border-bottom:1px solid var(--edge2);}
+.panel-title{font-family:var(--display);font-weight:700;font-size:12px;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--text);
+  display:flex;align-items:center;gap:10px;}
+.tbar{width:3px;height:14px;border-radius:2px;background:var(--ice);}
+.ptag{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+  padding:3px 9px;border-radius:5px;border:1px solid var(--edge2);color:var(--text3);}
+.panel-bd{padding:24px 30px 28px;}
+.notes-text{font-size:14px;line-height:1.9;color:var(--text2);font-weight:300;
+  white-space:pre-wrap;word-break:break-word;min-height:60px;}
+.notes-text:empty::before{content:'No active notices.';color:var(--text3);font-style:italic;font-size:13px;}
+
+/* Stale banner */
+#stale{display:none;background:rgba(240,161,74,0.08);border:1px solid rgba(240,161,74,0.2);
+  border-radius:10px;padding:10px 20px;margin-top:14px;font-family:var(--mono);font-size:10px;
+  letter-spacing:0.16em;text-transform:uppercase;color:var(--amber);text-align:center;}
+
+/* Sync row */
+.sync-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;
+  font-family:var(--mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);}
+.ssep{width:1px;height:10px;background:var(--edge2);}
+
+/* Animations */
+@keyframes fadeSlide{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.kpi{animation:fadeSlide 0.55s cubic-bezier(0.22,1,0.36,1) both;}
+.kpi:nth-child(1){animation-delay:0.04s;}.kpi:nth-child(2){animation-delay:0.11s;}.kpi:nth-child(3){animation-delay:0.18s;}
+.notes-panel{animation:fadeSlide 0.55s cubic-bezier(0.22,1,0.36,1) both 0.26s;}
+@keyframes numIn{from{opacity:0;transform:translateY(6px);filter:blur(4px);}to{opacity:1;transform:translateY(0);filter:blur(0);}}
+.kpi-val.pop{animation:numIn 0.3s cubic-bezier(0.22,1,0.36,1);}
+
+@media(max-width:900px){
+  .kpi-strip{grid-template-columns:1fr;}.page{padding:24px 16px 48px;}
+  header{padding:0 16px;}.header-core{display:none;}.kpi-val{font-size:54px;}
+}
+</style>
+</head>
+<body>
+<div class="bg-layer" aria-hidden="true"></div>
+<div class="grid-layer" aria-hidden="true"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-hex"><svg viewBox="0 0 16 16"><polygon points="8,1.5 14.5,5 14.5,11 8,14.5 1.5,11 1.5,5"/><line x1="8" y1="1.5" x2="8" y2="14.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/></svg></div>
+    <div class="logo-name"><em>APEX</em> TRANSIT</div>
+  </div>
+  <div class="header-core">
+    <div class="live-chip" id="chip">
+      <div class="ldot"></div>
+      <span class="chip-label" id="chip-lbl">Live Operations Feed</span>
+    </div>
+  </div>
+  <div class="hright"><div id="ht">--:--:--</div><div id="hd">---</div></div>
+</header>
+
+<main class="page">
+  <div class="eyebrow">Real-Time Metrics</div>
+  <div class="kpi-strip">
+    <div class="kpi kpi-a">
+      <div class="kpi-head"><span class="led"></span>Total Travelers</div>
+      <div class="kpi-val" id="v-t">—</div>
+      <div class="kpi-foot"><span class="kpi-name">All recorded passengers</span><span class="delta flat" id="d-t">—</span></div>
+      <div class="kwm" id="w-t" aria-hidden="true">0</div>
+    </div>
+    <div class="kpi kpi-b">
+      <div class="kpi-head"><span class="led"></span>OK Passengers</div>
+      <div class="kpi-val" id="v-p">—</div>
+      <div class="kpi-foot"><span class="kpi-name">Confirmed safe / aboard</span><span class="delta flat" id="d-p">—</span></div>
+      <div class="kwm" id="w-p" aria-hidden="true">0</div>
+    </div>
+    <div class="kpi kpi-c">
+      <div class="kpi-head"><span class="led"></span>Fed Count</div>
+      <div class="kpi-val" id="v-f">—</div>
+      <div class="kpi-foot"><span class="kpi-name">Meals &amp; rations served</span><span class="delta flat" id="d-f">—</span></div>
+      <div class="kwm" id="w-f" aria-hidden="true">0</div>
+    </div>
+  </div>
+
+  <div class="notes-panel">
+    <div class="panel-hd">
+      <div class="panel-title"><span class="tbar"></span>Operator Notices</div>
+      <div class="ptag" id="nts">—</div>
+    </div>
+    <div class="panel-bd"><div class="notes-text" id="i-notes"></div></div>
+  </div>
+
+  <div id="stale" role="alert">⚠ Data may be stale — reconnecting…</div>
+
+  <div class="sync-row">
+    <span>Auto-sync</span><span class="ssep"></span>
+    <span>5s interval</span><span class="ssep"></span>
+    <span>Last sync: <time id="ls">—</time></span>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+// Clock
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function tick(){
+  const n=new Date();
+  document.getElementById('ht').textContent=n.toLocaleTimeString('en-US',{hour12:false});
+  document.getElementById('hd').textContent=DAYS[n.getDay()]+'  '+MONS[n.getMonth()]+' '+String(n.getDate()).padStart(2,'0');
+}
+setInterval(tick,1000);tick();
+
+// State
+const prev={t:null,p:null,f:null};
+let retries=0, lastGood=0, syncTimer=null;
+const INTERVAL=5000, MAX_RETRIES=5, STALE_MS=30000, BACKOFF=2000;
+
+function flash(vid,wid,val){
+  const el=document.getElementById(vid);
+  el.classList.remove('pop');void el.offsetWidth;
+  el.textContent=val.toLocaleString();el.classList.add('pop');
+  document.getElementById(wid).textContent=val;
+}
+function setDelta(id,cur,old){
+  const el=document.getElementById(id);
+  if(old===null){el.textContent='NEW';el.className='delta flat';return;}
+  const d=cur-old;
+  if(d===0){el.textContent='±0';el.className='delta flat';return;}
+  el.textContent=(d>0?'+':'')+d.toLocaleString();
+  el.className='delta '+(d>0?'up':'dn');
+}
+function setStatus(s){
+  const chip=document.getElementById('chip');
+  const lbl=document.getElementById('chip-lbl');
+  chip.className='live-chip'+(s==='warn'?' warn':s==='dead'?' dead':'');
+  lbl.textContent=s==='live'?'Live Operations Feed':s==='warn'?'Reconnecting…':'Connection Lost';
+}
+
+async function sync(){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetch('/api/data?t='+Date.now(),{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+    clearTimeout(tid);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(typeof d!=='object'||d===null) throw new Error('Bad payload');
+
+    document.getElementById('stale').style.display='none';
+
+    const vals={t:+(d.travelers||0),p:+(d.passengers||0),f:+(d.fed||0)};
+    Object.entries(vals).forEach(([k,v])=>{
+      flash('v-'+k,'w-'+k,v);setDelta('d-'+k,v,prev[k]);prev[k]=v;
+    });
+
+    document.getElementById('i-notes').textContent=typeof d.notes==='string'?d.notes.slice(0,500):'';
+    if(d.updated_at){
+      try{
+        const t=new Date(d.updated_at);
+        document.getElementById('nts').textContent=t.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+      }catch(_){}
+    }
+    const now=new Date();
+    document.getElementById('ls').textContent=now.toLocaleTimeString('en-US',{hour12:false});
+    document.getElementById('ls').setAttribute('datetime',now.toISOString());
+
+    retries=0;lastGood=Date.now();setStatus('live');
+    syncTimer=setTimeout(sync,INTERVAL);
+  }catch(e){
+    retries++;
+    if(Date.now()-lastGood>STALE_MS) document.getElementById('stale').style.display='block';
+    setStatus(retries>=MAX_RETRIES?'dead':'warn');
+    const delay=Math.min(BACKOFF*Math.pow(2,retries-1),30000);
+    syncTimer=setTimeout(sync,delay);
+  }
+}
+
+sync();
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden){clearTimeout(syncTimer);retries=0;sync();}
+});
+</script>
+</body>
+</html>
